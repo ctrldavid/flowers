@@ -47,16 +47,10 @@ define [
 
       # Meaty functions
       render = =>
-        console.log 'locals:', @locals
         @$el.html @template @locals
       attach = =>
         @parentElement.append @el
         @_live = true
-
-      # Chain the lifecycle events
-      @once 'inited', -> lifeCycle 'load', 'loaded'
-      @once 'loaded', -> lifeCycle 'render', 'rendered'
-      @once 'rendered', -> lifeCycle 'appear', 'appeared'
 
       # Core methods for framework
       # init event starts the whole chain of events
@@ -79,6 +73,11 @@ define [
       # Shortcut methods for devs:
       for evt in ['init', 'inited', 'load', 'loaded', 'render', 'rendered', 'appear', 'appeared']
         @once evt, @[evt]
+
+      # Chain the lifecycle events
+      @once 'inited', -> lifeCycle 'load', 'loaded'
+      @once 'loaded', -> lifeCycle 'render', 'rendered'
+      @once 'rendered', -> lifeCycle 'appear', 'appeared'
 
     # Helper method for turning an event into a deferred that can be waited on.
     eventDeferred: (evt) ->
@@ -107,10 +106,16 @@ define [
 
   class BlarView extends View
     template: (locals) ->
-      console.log 'locals', locals
       "<div>Counter:</div><div class='num'>"+locals.x+"</div>"
     loaded: ->
+      console.log 'setting locals'
       @locals.x = 0
+      dfd = $.Deferred()
+      window.setTimeout (-> dfd.resolve()), 1000
+      @waitOn dfd.promise()
+
+    tick: ->
+      @locals.x++
 
   class TestView extends View
     template: -> "<div class='test'></div><div>text holyshit</div><div class='blar'></div>"
@@ -119,11 +124,12 @@ define [
       @x = 0
     render: ->
       @subV = new BlarView
+      #@waitOn @append '.blar', @subV
       @append '.blar', @subV
 
     appeared: ->
       window.setInterval =>
-        console.log 'x'
+        @subV.tick()
         #@subV.trigger 're-render'
       , 1000
 
