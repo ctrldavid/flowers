@@ -1,8 +1,8 @@
 define [
-  'backbone',
-  'jquery'
-], (backbone, $) ->
-
+  'underscore'
+  'backbone'
+  '$'
+], (_, Backbone, $) ->
   # Lifecycle goals:
   # init     : Set any fields that have their data already available
   # inited   :
@@ -13,32 +13,43 @@ define [
   # appear   : View is about to be added to the document
   # appeared : View has just been added to the document
 
-  class View extends backbone.View
+  class View extends Backbone.View
+    trigger: ->
+      console.log 'T:', @cid, arguments
+      super
+
     constructor: ->
       super
       @_waits = []
       @_subviews = []
       @_live = false
+      @locals = {}
 
       # Core events (load, render, appear) can trigger multiple times
       # to allow for tiered loading. Any @waitOn statements will
       # cause the current event to "fail" conceptually, and the view will
       # trigger it again once the new @waitOns have resolved. Once there are
       # no more async actions to wait for, the event is complete
-      lifeCycle = (evt, evtEnd) ->
+      lifeCycle = (evt, evtEnd) =>
         @trigger evt
         waitLoop evt, evtEnd
 
-      waitLoop = (evt, evtEnd) ->
-        $.when.apply($, @_waits).then ->
-          @_waits = []
-          @trigger evt
-          if @_waits.length == 0 then @trigger evtEnd else waitLoop evt
+      waitLoop = (evt, evtEnd) =>
+        if @_waits.length == 0
+          @trigger evtEnd
+        else
+          console.log 'looping', evt, @_waits.length
+          $.when.apply($, @_waits).then =>
+            @_waits = []
+            @trigger evt
+            waitLoop evt, evtEnd
+
 
       # Meaty functions
-      render = ->
+      render = =>
+        console.log 'locals:', @locals
         @$el.html @template @locals
-      attach = ->
+      attach = =>
         @parentElement.append @el
         @_live = true
 
@@ -66,7 +77,7 @@ define [
       @once 'appeared', attach
 
       # Shortcut methods for devs:
-      for evt in ['load', 'loaded', 'render', 'rendered', 'appear', 'appeared']
+      for evt in ['init', 'inited', 'load', 'loaded', 'render', 'rendered', 'appear', 'appeared']
         @once evt, @[evt]
 
     # Helper method for turning an event into a deferred that can be waited on.
@@ -85,7 +96,7 @@ define [
       view.parent = this
       view.parentElement = target
 
-      @subviews.push view
+      @_subviews.push view
 
       view.trigger 'init'
 
@@ -93,3 +104,43 @@ define [
       # can wait on it.
       view.eventDeferred 'rendered'
 
+
+  class BlarView extends View
+    template: (locals) ->
+      console.log 'locals', locals
+      "<div>Counter:</div><div class='num'>"+locals.x+"</div>"
+    loaded: ->
+      @locals.x = 0
+
+  class TestView extends View
+    template: -> "<div class='test'></div><div>text holyshit</div><div class='blar'></div>"
+
+    init: ->
+      @x = 0
+    render: ->
+      @subV = new BlarView
+      @append '.blar', @subV
+
+    appeared: ->
+      window.setInterval =>
+        console.log 'x'
+        #@subV.trigger 're-render'
+      , 1000
+
+
+  x = new TestView
+  x.parentElement = $ 'body'
+  console.log x
+  x.trigger 'init'
+
+
+###
+
+trigger load
+if waits
+  delay then loop
+else
+  trigger loaded
+
+
+###
