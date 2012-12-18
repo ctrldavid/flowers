@@ -1,0 +1,19 @@
+{
+  "name": "client",
+  "version": "0.0.0",
+  "description": "Flowers Client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "jade": "~0.27.7",
+    "fibers": "~0.6.9",
+    "stylus": "~0.31.0",
+    "coffee-script": "~1.4.0",
+    "express": "~3.0.4",
+  }
+}

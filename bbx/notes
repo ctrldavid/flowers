@@ -1,0 +1,44 @@
+front end framework lifecycle
+
+fn init (no s/z confusion)
+
+fn willLoad
+
+fn load
+(wait for all @waitOns to resolve)
+evt load
+(if more @waitOns after evt, wait on those and fire another load)
+
+<all loads complete>
+fn didLoad
+
+fn willRender
+fn render?
+fn didRender
+
+fn willAppear
+fn appear?
+fn didRender
+
+////// OR //////
+
+init
+  |
+load <---+
+  +------+
+  |
+loaded
+  |
+render <-+
+  +------+
+  |
+rendered
+  |
+appear <-+
+  +------+
+  |
+appeared
+
+load events are for loading models
+render events are for appending views
+appear events are for dom modifications before finally appending to the document.
