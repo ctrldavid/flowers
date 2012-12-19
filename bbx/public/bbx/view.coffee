@@ -33,7 +33,7 @@ define [
         viewMethods.render view
 
     render: (view) ->
-      view.$el.html view.template view.locals
+      view.$el.append view.template view.locals
       viewMethods.lifecycle(view, 'render').then ->
         view.rendered?()
         view.trigger 'rendered'
@@ -61,8 +61,6 @@ define [
         else
           dfd.resolve()
       dfd.promise()
-
-
 
   class View extends Backbone.View
     # trigger: ->
@@ -105,36 +103,9 @@ define [
 
       return dfd
 
-
-  class BlarView extends View
-    template: (locals) ->
-      "<div>Counter:</div><div class='num'>"+locals.x+"</div>"
-    loaded: ->
-      @locals.x = 0
-      dfd = $.Deferred()
-      window.setTimeout (-> dfd.resolve()), 1000
-      @waitOn dfd.promise()
-
-    tick: ->
-      @locals.x++
-
-  class TestView extends View
-    template: -> "<div class='test'></div><div>text holyshit</div><div class='blar'></div>"
-
-    init: ->
-      @x = 0
-    render: ->
-      @subV = new BlarView
-      #@waitOn @append '.blar', @subV
-      @append '.blar', @subV
-
-    appeared: ->
-      window.setInterval =>
-        @subV.tick()
-        #@subV.trigger 're-render'
-      , 1000
+    reRender: ->
+      # Not sure how this should work, perhaps a full reset, or just start with
+      # 'loaded' and continue from there?
 
 
-  x = new TestView
-  console.log x
-  x.appendTo $ 'body'
+  return View
