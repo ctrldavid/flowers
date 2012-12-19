@@ -56,7 +56,6 @@ define [
       view.trigger evt
       $.when.apply($, view._waits).then ->
         if view._waits.length > 0
-          console.log 'looping', evt, view._waits.length
           view._waits = []
           viewMethods.eventLoop view, evt, dfd
         else
@@ -111,7 +110,6 @@ define [
     template: (locals) ->
       "<div>Counter:</div><div class='num'>"+locals.x+"</div>"
     loaded: ->
-      console.log 'setting locals'
       @locals.x = 0
       dfd = $.Deferred()
       window.setTimeout (-> dfd.resolve()), 1000
