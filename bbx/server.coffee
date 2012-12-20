@@ -2,6 +2,7 @@ express = require 'express'
 jade = require 'jade'
 fs = require 'fs'
 coffee = require 'coffee-script'
+stylus = require 'stylus'
 
 app = express()
 app.set 'views', ''
@@ -39,6 +40,40 @@ app.get /^\/(.*)\.js$/, ({params: [filename]}, res) ->
                   template = jade.compile data.toString(), {pretty: false, client: true, compileDebug: false}
                   response = "define(['vendor/jade.runtime'],function(){return #{template};});"
               res.send response
+    else
+      res.send 'wat?'
+
+  tryPath()
+
+app.get /^\/(.*)\.css$/, ({params: [filename]}, res) ->
+  console.log 'CSS:', filename
+  filePaths = []
+  for path in [frameworkPath, applicationPath]  # App files take precedence
+    for ext in ['styl', 'css']
+      filePath = path + filename + '.' + ext
+      filePaths.push {ext, filePath}
+
+  tryPath = ->
+    {filePath, ext} = filePaths.pop()
+    console.log 'Trying: ', filePath
+    if filePath
+      fs.stat filePath, (err, stats) ->
+        if err || not stats.isFile()
+          tryPath()
+        else
+          fs.readFile filePath, (err, data) ->
+            if err
+              tryPath()
+            else
+              res.contentType 'css'
+              switch ext
+                when 'css'
+                  response = data
+                  res.send response
+                when 'styl'
+                  response = stylus.render data.toString(), (err, css)->
+                    res.send css
+
     else
       res.send 'wat?'
 
